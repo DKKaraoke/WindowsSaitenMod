@@ -5,14 +5,15 @@ function main() {
     try {
         disableForegroundCheck(baseAddress);
         disableForegroundCheck2(baseAddress);
-        hookTypeA(baseAddress);
-        hookTypeB(baseAddress);
-
-        console.log("準備完了");
-
     } catch (e) {
         console.log(e);
     }
+
+    hookTypeA(baseAddress);
+    hookTypeB(baseAddress);
+
+    console.log("準備完了");
+
 }
 
 
