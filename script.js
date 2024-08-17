@@ -2,10 +2,17 @@
 function main() {
 
     const baseAddress = Module.getBaseAddress("DKKaraokeWindows.exe");
+    try {
+        disableForegroundCheck(baseAddress);
+        disableForegroundCheck2(baseAddress);
+        hookTypeA(baseAddress);
+        hookTypeB(baseAddress);
 
-    disableForegroundCheck(baseAddress);
-    hookTypeA(baseAddress);
-    hookTypeB(baseAddress);
+        console.log("準備完了");
+
+    } catch (e) {
+        console.log(e);
+    }
 }
 
 
@@ -14,11 +21,22 @@ main();
 
 function disableForegroundCheck(baseAddress) {
 
-
     const targetPointer = parseInt(baseAddress) + 0x0e8940;
     const targetPointerTxt = "0x" + targetPointer.toString(16);
     const addr0 = new NativePointer(targetPointerTxt);
 
+    Memory.protect(addr0, 16, "rwx")
+    Memory.writeByteArray(addr0, [0xc3, 0x90, 0x90, 0x90]);
+
+}
+
+function disableForegroundCheck2(baseAddress) {
+
+    const targetPointer = parseInt(baseAddress) + 0x0e8a00;
+    const targetPointerTxt = "0x" + targetPointer.toString(16);
+    const addr0 = new NativePointer(targetPointerTxt);
+
+    Memory.protect(addr0, 16, "rwx")
     Memory.writeByteArray(addr0, [0xc3, 0x90, 0x90, 0x90]);
 
 }
