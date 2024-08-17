@@ -1,1 +1,1 @@
-node dam.js
+npm install & node dam.js
