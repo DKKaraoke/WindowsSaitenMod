@@ -3,26 +3,35 @@ function main() {
 
     const baseAddress = Module.getBaseAddress("DKKaraokeWindows.exe");
     try {
+        disableModuleCheck(baseAddress)
         disableForegroundCheck(baseAddress);
         disableForegroundCheck2(baseAddress);
     } catch (e) {
-        console.log(e);
+        send(e);
     }
-
     hookTypeA(baseAddress);
     hookTypeB(baseAddress);
-
-    console.log("準備完了");
-
+    findStart(baseAddress);
 }
 
 
 main();
 
 
+function disableModuleCheck(baseAddress) {
+
+    const targetPointer = parseInt(baseAddress) + 0x0e9fe9;
+    const targetPointerTxt = "0x" + targetPointer.toString(16);
+    const addr0 = new NativePointer(targetPointerTxt);
+
+    Memory.protect(addr0, 16, "rwx")
+    Memory.writeByteArray(addr0, [0x41, 0xb6, 0x00]);
+
+}
+
 function disableForegroundCheck(baseAddress) {
 
-    const targetPointer = parseInt(baseAddress) + 0x0e8940;
+    const targetPointer = parseInt(baseAddress) + 0xe9220;
     const targetPointerTxt = "0x" + targetPointer.toString(16);
     const addr0 = new NativePointer(targetPointerTxt);
 
@@ -33,7 +42,7 @@ function disableForegroundCheck(baseAddress) {
 
 function disableForegroundCheck2(baseAddress) {
 
-    const targetPointer = parseInt(baseAddress) + 0x0e8a00;
+    const targetPointer = parseInt(baseAddress) + 0x0e92e0;
     const targetPointerTxt = "0x" + targetPointer.toString(16);
     const addr0 = new NativePointer(targetPointerTxt);
 
@@ -44,8 +53,10 @@ function disableForegroundCheck2(baseAddress) {
 
 
 function hookTypeA(baseAddress) {
+    // todo search this address in program
+    // const targetPointer = parseInt(baseAddress) + 0x01d29e2;\
+    const targetPointer = parseInt(baseAddress) + 0x01d3722;
 
-    const targetPointer = parseInt(baseAddress) + 0x01d29e2;
     const targetPointerTxt = "0x" + targetPointer.toString(16);
     const addr0 = new NativePointer(targetPointerTxt);
 
@@ -55,7 +66,7 @@ function hookTypeA(baseAddress) {
 
                 // 本当は、XMM0レジスタの中を読めば終わりだが、fridaはこれを読みだせない。  
                 // したがって、XMM0のデータをメモリに書き込む命令の直後でそのメモリの内容を呼び出すことで値を取得している。
-                // その時の命令が f2 0f 11 4 ec 60  ( movsd qword ptr [rsp + rbp * 0x8 + 0x60] , xmm0)
+                // その時の命令が f2 0f 11 44 ec 60  ( movsd qword ptr [rsp + rbp * 0x8 + 0x60] , xmm0)
                 // これをコードで実現している
                 let base = parseInt(this.context.rsp, "16");
                 let type = parseInt(this.context.rbp, "16");
@@ -65,22 +76,44 @@ function hookTypeA(baseAddress) {
                 //Memory.writeDouble(ptr, 1);
                 //return;
 
-                if (isDetected > 0) {
+                if (isDetected != 0) {
+                    send({ tech: type, value: isDetected, hookType: "A" });
                     print(type);
                 }
-
             }
         });
     } catch (e) {
-        console.log(e);
+        send(e);
+    }
+
+}
+
+
+// 採点開始に呼ばれる
+function findStart(baseAddress) {
+    const targetPointer = parseInt(baseAddress) + 0x1a8700;
+    const targetPointerTxt = "0x" + targetPointer.toString(16);
+    const addr0 = new NativePointer(targetPointerTxt);
+
+    try {
+        Interceptor.attach(addr0, {
+            onEnter: function (args) {
+                console.log("Saiten Start");
+                send({ status: "start" });
+            }
+        });
+    } catch (e) {
+        send(e);
     }
 
 }
 
 
 function hookTypeB(baseAddress) {
+    // ( movsd qword ptr [rsp + r15 * 0x8 + 0x70] , xmm0) f2 40 0f 11 44 fc 70
+    //const targetPointer = parseInt(baseAddress) + 0x01d2c08;
+    const targetPointer = parseInt(baseAddress) + 0x01d3948;
 
-    const targetPointer = parseInt(baseAddress) + 0x01d2c08;
     const targetPointerTxt = "0x" + targetPointer.toString(16);
     const addr0 = new NativePointer(targetPointerTxt);
 
@@ -95,14 +128,15 @@ function hookTypeB(baseAddress) {
                 let isDetected = ptr.readDouble();
 
 
-                if (isDetected > 0) {
+                if (isDetected != 0) {
+                    send({ tech: type, value: isDetected, hookType: "B" });
                     print(type);
                 }
 
             }
         });
     } catch (e) {
-        console.log(e);
+        send(e);
     }
 
 }
