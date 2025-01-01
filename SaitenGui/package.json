@@ -1,0 +1,19 @@
+{
+  "name": "saitengui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron/rebuild": "^3.6.0",
+    "electron-package": "^0.1.0",
+    "electron-rebuild": "^3.2.9"
+  },
+  "dependencies": {
+    "electron": "^32.1.0"
+  }
+}
